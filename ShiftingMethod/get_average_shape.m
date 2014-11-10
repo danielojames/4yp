@@ -1,7 +1,7 @@
 % Shifts and averages the response curves of all pixels to provide a shape
 % that can be used as a standard model of pixel response
 
-function shape = get_average_shape(pixels,light_level)
+function shape = get_average_shape(pixels,light_level,noise_data)
     % the light levels to calculate the shift at
     ref_levels = [2.5,4.2,8,9.5,21,40,55,90,100];
     num_pixels = size(pixels,2);
@@ -16,6 +16,7 @@ function shape = get_average_shape(pixels,light_level)
     shifts(1) = 0;    
     figure('Name','Shifted-pixels');
     hold on;    
+    
     % plot reference pixel
     plot(ref_pixel,light_level)
     
@@ -61,8 +62,13 @@ function shape = get_average_shape(pixels,light_level)
     end
     
     errors = mean(errors,2);
-    figure('Name','Mean errors');
-    plot(pixels(:,4),errors);
+    %figure('Name','Mean errors');
+    plot(pixels(:,4),errors,'c','LineWidth',3);
+    
+    % calculate mean temporal noise
+    mean_pixels = mean(pixels,2)';
+    noise = abs((noise_data * 2)./mean_pixels)*100;
+    plot(pixels(:,4),noise,'m','LineWidth',3);
     
     return
 end
