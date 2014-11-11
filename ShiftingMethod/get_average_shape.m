@@ -64,8 +64,13 @@ function shape = get_average_shape(pixels,light_level,noise_data)
     errors = mean(errors,2);
     %figure('Name','Mean errors');
     plot(pixels(:,4),errors,'c','LineWidth',3);
+    plot([0,1022],[2,2],'k--','LineWidth',3)
+    ylim([0,25]);
     
     % calculate mean temporal noise
+    % convert pixel values to loight levels using lookup table
+    % 2 standard deviations above and below
+    % then calcualte error
     mean_pixels = mean(pixels,2)';
     noise = abs((noise_data * 2)./mean_pixels)*100;
     plot(pixels(:,4),noise,'m','LineWidth',3);
