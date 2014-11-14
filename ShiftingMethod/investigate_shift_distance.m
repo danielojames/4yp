@@ -50,6 +50,17 @@ mean_shifts(:,2) = mean(shifts_r2,2);
 mean_shifts(:,3) = mean(shifts_r3,2);
 
 figure('Name','Shifts in each region');
+title('Shift in each pixel region');
+hold on;
+set(gca, 'XTick',[1,2,3])
+set(gca, 'XTickLabel',{'1st','2nd','3rd'})
+xlabel('Region');
+ylabel('Shift');
+for i = 1:num_pixels
+    plot(1:3,mean_shifts(i,:),'x-');
+end
+
+figure('Name','Mean shifts in each region');
 title('Mean shift in each pixel region');
 hold on;
 set(gca, 'XTick',[1,2,3])
