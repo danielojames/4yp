@@ -81,21 +81,3 @@ for i = 1:num_pixels
     plot(pixels(i,:),errors(i,:),'x');
 end
 plot([0,1022],[4,4],'k--','LineWidth',2);
-
-% calculate model limits
-model_limits = zeros(num_pixels,2);
-for i = 1:num_pixels
-    model_limits(i,1) = round(pixels(i,find(errors(i,25:end) > 4,1) + 25));
-    model_limits(i,2) = find(errors(i,25:end) > 4,1) + 25;
-end
-
-figure('Name','Model limits');
-title('Models plotted over their valid regions');
-xlabel('Pixel value');
-ylabel('Light intensity cd/m2');
-xlim([0,650]);
-hold on;
-
-for i = 1:num_pixels
-    plot(uni_pixels(1:model_limits(i,1)) - shifts(i),linear_model(1:model_limits(i,1)));
-end
