@@ -11,6 +11,10 @@ lower_light_limit = 0.8;
 upper_light_limit = 4.2;
 lower_index_limit = find(light_level == lower_light_limit);
 upper_index_limit = find(light_level == upper_light_limit);
+
+linear_region_pixels = pixels(:,lower_index_limit:upper_index_limit);
+linear_region_light_level = light_level(lower_index_limit:upper_index_limit);
+
 num_pixels = size(pixels,1);
 num_levels = size(pixels,2);
 
