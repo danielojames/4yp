@@ -130,53 +130,66 @@ for i = 1:num_pixels
     % linear and non-linear models
     linear_end = model_crossovers(i) - linear_shifts(i);
     non_linear_end = model_crossovers(i) - non_linear_shifts(i);
-    if linear_shifts(i) > 0
+    if linear_shifts(i) >= 0
         zero_padding = zeros(1,abs(linear_shifts(i)));
         shape = [zero_padding linear_model(1:linear_end) non_linear_model(non_linear_end:end)-vertical_shifts(i)];
     else
-        shape = [linear_model(1:linear_end) non_linear_model(non_linear_end:end)-vertical_shifts(i)];
+        shape = [linear_model(-linear_shifts(i):linear_end-1) non_linear_model(non_linear_end:end)-vertical_shifts(i)];
     end
-    if length(shape) < 1022
-        shape(end:1022) = 110;
+    if length(shape) < 1023
+        shape(end:1023) = 110;
     end
+    shapes(i,:) = shape(2:1023);
     for j = 1:num_levels
         actual = light_level(j);
         lower_pixel = floor(pixels(i,j));
-        predicted = interp1([lower_pixel lower_pixel + 1],...
-            [shape(lower_pixel), shape(lower_pixel + 1)],...
-            lower_pixel);
+        if lower_pixel < 1022
+            predicted = interp1([lower_pixel lower_pixel + 1],...
+                [shapes(i,lower_pixel), shapes(i,lower_pixel + 1)],...
+                lower_pixel);
+        else
+            predicted = shapes(i,lower_pixel);
+        end
         errors(i,j) = abs(actual-predicted)/actual * 100;
     end
 end
+
+mean_errors = nanmean(errors,1);
 
 figure('Name','Percentage error of combined models');
 hold on;
 xlabel('Pixel value');
 ylabel('Percentage error');
 xlim([0,1022]);
+ylim([0,10]);
 for i = 1:num_pixels
     plot(pixels(i,:),errors(i,:),'x');
 end
+plot(pixels(5,:),mean_errors,'k-','LineWidth',3);
 plot([0,1022],[4,4],'k-.','LineWidth',3);
 % plot combined models and crossover points
 for i = 1:num_pixels
-    figure;
+    figure('Name',['Pixel response ',num2str(i)]);
     hold on;
+    title(['Pixel ',num2str(i),'response']);
+    xlabel('Pixel value');
+    ylabel('Light intensity cd/m2');
     xlim([0,1022]);
-    plot(pixels(i,:),light_level,'x');
+    original_plot = plot(pixels(i,:),light_level,'x');
     if ~isnan(model_crossovers(i))
         linear_end = model_crossovers(i) - linear_shifts(i);
         non_linear_end = model_crossovers(i) - non_linear_shifts(i);
-        plot(linear_eff_pixels(i,1:linear_end),linear_model(1:linear_end));
-        plot(non_linear_eff_pixels(i,non_linear_end:end),non_linear_model(non_linear_end:end)-vertical_shifts(i));
-        plot(model_crossovers(i),linear_model(model_crossovers(i) - linear_shifts(i)),'+','MarkerSize',10);
+        linear_plot = plot(linear_eff_pixels(i,1:linear_end),linear_model(1:linear_end));
+        non_linear_plot = plot(non_linear_eff_pixels(i,non_linear_end:end),non_linear_model(non_linear_end:end)-vertical_shifts(i));
         annotation_string = ['Linear shift: ',num2str(linear_shifts(i)),char(10),...
             'Non-linear shift: ',num2str(non_linear_shifts(i)),char(10),...
             'Vertical shift: ',num2str(vertical_shifts(i)),char(10),...
             'Crossover pixel: ',num2str(model_crossovers(i))];
         annotation('textbox',[0.2,0.5,0.18,0.11],'String',annotation_string)
     end
-    plot(pixels(i,:),errors(i,:),'x');
-    plot([0,1022],[4,4],'k-.','LineWidth',3);
+    error_plot = plot(pixels(i,:),errors(i,:),'x');
+    error_aim_plot = plot([0,1022],[4,4],'k-.','LineWidth',3);
+    
+    legend('Original data','Linear model','Non-linear model','Model errors','4% error aim','Location','NorthWest');
 end
 
