@@ -1,6 +1,6 @@
 close all
-%clear all
-
+% clear all
+% 
 % load('data/HDR_Pixel_Data_MONO1.mat')
 % load('data/HDR_Noise_Data_MONO1.mat')
 % 
@@ -30,7 +30,7 @@ max_intercept = max(linear_region_intercept);
 mean_intercept = mean(linear_region_intercept);
 
 % create linear model
-uni_pixels = 0:1022;
+uni_pixels = 1:1022;
 linear_model = polyval([mean_gradient,max_intercept],uni_pixels);
 linear_model(linear_model < 0) = 0;
 
@@ -45,7 +45,7 @@ for i = 1:num_pixels
         
         shift = shift + interp_pixel - pixels(i,j);
     end
-    shifts(i) = round(shift / length(lower_index_limit:upper_index_limit));
+    linear_shifts(i) = round(shift / length(lower_index_limit:upper_index_limit));
 end
 
 figure('Name','Linear model');
@@ -57,7 +57,7 @@ xlim([0 700]);
 ylim([0 10]);
 for i = 1:num_pixels
     plot(pixels(i,:),light_level,'x');
-    plot(uni_pixels - shifts(i),linear_model);
+    plot(uni_pixels - linear_shifts(i),linear_model);
 end
 
 figure('Name','Errors in linear model');
@@ -73,11 +73,15 @@ for i = 1:num_pixels
     for j = 1:num_levels
         actual = light_level(j);
         lower_pixel = floor(pixels(i,j));
-        predicted = interp1([lower_pixel lower_pixel + 1],...
-            [linear_model(lower_pixel), linear_model(lower_pixel + 1)],...
-            pixels(i,j));
-        errors(i,j) = abs(actual-predicted)/actual * 100;
+        if lower_pixel < 1022
+            predicted = interp1([lower_pixel lower_pixel + 1],...
+                [linear_model(lower_pixel), linear_model(lower_pixel + 1)],...
+                pixels(i,j));
+        else
+            predicted = linear_model(lower_pixel);
+        end
+        linear_errors(i,j) = abs(actual-predicted)/actual * 100;
     end
-    plot(pixels(i,:),errors(i,:),'x');
+    plot(pixels(i,:),linear_errors(i,:),'x');
 end
-plot([0,1022],[4,4],'k--','LineWidth',2);
+plot([1,1022],[4,4],'k--','LineWidth',2);
