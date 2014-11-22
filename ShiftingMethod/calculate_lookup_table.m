@@ -98,13 +98,17 @@ function [vertical_shift, crossover] = get_vertical_shift_and_crossover(...
             if isnan(crossover(i,j))
                 vertical_shift(i,j) = non_linear_model(non_linear_start_index) - linear_model(linear_eff_start_indexes(i,j));    
                 for k = 1:800-non_linear_eff_start_pixels(i,j)
-                    if non_linear_model(non_linear_start_index + k) - vertical_shift(i,j) < linear_model(linear_eff_start_indexes(i,j) + k)
+                    if non_linear_model(non_linear_start_index + k) - vertical_shift(i,j) <= linear_model(linear_eff_start_indexes(i,j) + k)
                         % the crossover value is stored as the pixel value received
                         % from the camera
                         crossover(i,j) = non_linear_eff_start_pixels(i,j) + k;
                     end
                 end
-            end        
+            end
+            
+            if isnan(crossover(i,j))
+                crossover(i,j) = non_linear_start_index + non_linear_shift(i,j);
+            end
         end
     end
 

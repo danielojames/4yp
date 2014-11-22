@@ -15,10 +15,13 @@ for i = 1:height
         hold on;
         xlim([0 1022]);
         l = lookup_table(i,j);
-        plot(squeeze(real_pixels(i,j,:)),light_level,'x');
         linear_end = l.crossing - l.l_shift;
         non_linear_end = l.crossing - l.nl_shift;
-        plot(uni_pixels(1:linear_end) + l.l_shift,linear_model);
-        plot(uni_pixels(non_linear_end:end) + l.nl_shift,non_linear_model - l.v_shift);
+        plot(squeeze(real_pixels(i,j,:)),light_level,'x');
+        plot(uni_pixels(1:linear_end) + l.l_shift,linear_model(1:linear_end));
+        plot(uni_pixels(non_linear_end:end) + l.nl_shift,non_linear_model(non_linear_end:end) - l.v_shift);
+        if ~isnan(l.crossing)
+            plot(l.crossing,2,'x','MarkerSize',10)
+        end
     end
 end
