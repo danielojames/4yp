@@ -1,9 +1,31 @@
 function [linear_model,linear_lower_limit,linear_upper_limit,...
     non_linear_model,ref_levels,ref_indexes] = calculate_pixel_models(pixels,light_level)
-
-    [linear_model,linear_lower_limit,linear_upper_limit] = calculate_linear_model(pixels,light_level);
+    parfor i = 1:2
+        if i == 1
+            [linear_model,linear_lower_limit,linear_upper_limit] = calculate_linear_model(pixels,light_level);
+            save_linear_model(linear_model,linear_lower_limit,linear_upper_limit);
+        elseif i == 2
+            [non_linear_model,ref_levels,ref_indexes] = calculate_non_linear_model(pixels,light_level);
+            save_non_linear_model(non_linear_model,ref_levels,ref_indexes);
+        end
+    end
     
-    [non_linear_model,ref_levels,ref_indexes] = calculate_non_linear_model(pixels,light_level);
+    load('linear_model.mat');
+    load('non_linear_model.mat');
+    linear_model = linear_model;
+    linear_lower_limit = linear_lower_limit;
+    linear_upper_limit = linear_upper_limit;
+    non_linear_model =non_linear_model;
+    ref_levels = ref_levels;
+    ref_indexes = ref_indexes;
+end
+
+function save_linear_model(linear_model,linear_lower_limit,linear_upper_limit)
+    save('linear_model','linear_model','linear_lower_limit','linear_upper_limit');
+end
+
+function save_non_linear_model(non_linear_model,ref_levels,ref_indexes)
+    save('non_linear_model','non_linear_model','ref_levels','ref_indexes');
 end
 
 % this function creates a linear model that is the mean representation of
@@ -11,6 +33,10 @@ end
 % matrix with each pixel on a new row and each column representing a light
 % level
 function [linear_model,lower_index_limit,upper_index_limit] = calculate_linear_model(pixels,light_level)
+    
+    display('Linear model fitting started');
+    tic
+    
     % light levels between which the linear region should be modelled
     lower_light_limit = 0.8;
     upper_light_limit = 4.2;
@@ -38,6 +64,9 @@ function [linear_model,lower_index_limit,upper_index_limit] = calculate_linear_m
     uni_pixels = 1:1022;
     linear_model = polyval([mean_gradient,max_intercept],uni_pixels);
     linear_model(linear_model < 0) = 0;
+    
+    display('Linear model fitting finished');
+    toc
     return;
 end
 
@@ -46,6 +75,8 @@ end
 % a matrix with each pixel on a new row and each column representing a
 % light level
 function [non_linear_model,ref_levels,ref_indexes] = calculate_non_linear_model(pixels,light_level)
+    display('Non linear model fitting started');
+    tic
     num_pixels = size(pixels,1);
     num_levels = length(light_level);
     % the light level where we consider the non_linear region to
@@ -95,4 +126,13 @@ function [non_linear_model,ref_levels,ref_indexes] = calculate_non_linear_model(
     
     non_linear_model = nanmean(light_levels_interp,1);
     non_linear_model(1:400) = nan(1,400);
+    
+    [max_val,max_index] = max(non_linear_model);
+    
+    for i = 1:length(non_linear_model) - max_index
+        non_linear_model(max_index + i) = max(non_linear_model) + mean(diff(non_linear_model(max_index - 1:max_index)));
+    end
+    
+    display('Non linear model fitting finished');
+    toc
 end
